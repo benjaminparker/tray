@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-object QuickstartServer extends App with WorkflowRoutes {
+object WorkflowServer extends App with WorkflowRoutes {
 
   implicit val system: ActorSystem = ActorSystem("workflowServer")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
