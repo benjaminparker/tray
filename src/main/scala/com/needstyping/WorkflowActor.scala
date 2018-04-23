@@ -6,16 +6,16 @@ import akka.actor.{Actor, Props}
 
 import scala.collection.immutable.HashMap
 
-final case class Workflow(id: String, numberOfSteps: Int)
+final case class Workflow(workflow_id: String, number_of_steps: Int)
 
-final case class Execution(id: String, workflowId: String, currentStep: Int = 0, creationDate: String = LocalDate.now.toString)
+final case class Execution(execution_id: String, workflow_id: String, current_step: Int = 0, creation_date: String = LocalDate.now.toString)
 
 
 object WorkflowActor {
 
-  final case class CreateWorkflow(numberOfSteps: Int)
+  final case class CreateWorkflow(number_of_steps: Int)
 
-  final case class CreateExecution(workflowId: String)
+  final case class CreateExecution(workflow_id: String)
 
   //These horrible vars are needed as we are using memory as a data store - alternative is mutable map which seems worse and not thread safe
   var workflows: Map[String, Workflow] = HashMap.empty
@@ -32,7 +32,7 @@ object WorkflowActor {
 
   def createExecution(wf: Workflow): Execution = {
     executionId += 1
-    Execution("EX" + executionId, wf.id)
+    Execution("EX" + executionId, wf.workflow_id)
   }
 }
 
@@ -43,13 +43,12 @@ class WorkflowActor extends Actor {
   def receive: Receive = {
     case CreateWorkflow(numberOfSteps) =>
       val wf = createWF(numberOfSteps)
-      workflows = workflows + (wf.id -> wf)
+      workflows = workflows + (wf.workflow_id -> wf)
       sender() ! wf
 
     case CreateExecution(workflowId) =>
       val execution = workflows.get(workflowId) map createExecution
-      execution foreach { e => executions == executions + (e.id -> e) }
-      println("Execution: " + execution)
+      execution foreach { e => executions == executions + (e.execution_id -> e) }
       sender() ! execution
   }
 }

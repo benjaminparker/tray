@@ -26,7 +26,7 @@ trait WorkflowRoutes extends JsonSupport {
         pathEnd {
           post {
             entity(as[CreateWorkflow]) { json =>
-              val workflowCreated = (workflowActor ? CreateWorkflow(json.numberOfSteps)).mapTo[Workflow]
+              val workflowCreated = (workflowActor ? CreateWorkflow(json.number_of_steps)).mapTo[Workflow]
               onSuccess(workflowCreated) { workflow =>
                 complete((StatusCodes.Created, workflow))
               }

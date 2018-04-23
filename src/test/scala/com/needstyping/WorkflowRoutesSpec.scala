@@ -27,8 +27,8 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
         status shouldEqual StatusCodes.Created
         contentType shouldEqual ContentTypes.`application/json`
         val wf = entityAs[Workflow]
-        wf.id should startWith("WF")
-        wf.numberOfSteps shouldEqual 5
+        wf.workflow_id should startWith("WF")
+        wf.number_of_steps shouldEqual 5
       }
     }
   }
@@ -53,10 +53,10 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
         status shouldEqual StatusCodes.Created
         contentType shouldEqual ContentTypes.`application/json`
         val ex = entityAs[Execution]
-        ex.id should startWith("EX")
-        ex.workflowId shouldEqual "WF76"
-        ex.currentStep shouldEqual 0
-        ex.creationDate shouldEqual LocalDate.now.toString  //Only the date part so safe to run ... unless its close to midnight on a slow machine
+        ex.execution_id should startWith("EX")
+        ex.workflow_id shouldEqual "WF76"
+        ex.current_step shouldEqual 0
+        ex.creation_date shouldEqual LocalDate.now.toString  //Only the date part so safe to run ... unless its close to midnight on a slow machine
       }
     }
   }
