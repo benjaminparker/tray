@@ -15,23 +15,32 @@ import scala.concurrent.duration._
 trait WorkflowRoutes extends JsonSupport {
 
   implicit def system: ActorSystem
+
   implicit lazy val timeout = Timeout(5.seconds)
 
   def workflowActor: ActorRef
 
   lazy val workflowRoutes: Route =
     pathPrefix("workflows") {
-      pathEnd {
-        concat(
+      concat(
+        pathEnd {
           post {
-            entity(as[CreateWorkflow]) { createWorkflow =>
-              val workflowCreated = (workflowActor ? createWorkflow).mapTo[Workflow]
+            entity(as[CreateWorkflow]) { json =>
+              val workflowCreated = (workflowActor ? CreateWorkflow(json.numberOfSteps)).mapTo[Workflow]
               onSuccess(workflowCreated) { workflow =>
                 complete((StatusCodes.Created, workflow))
               }
             }
           }
-        )
-      }
+        },
+        path(Segment / "executions") { workflowId =>
+          post {
+            val maybeExecution = (workflowActor ? CreateExecution(workflowId)).mapTo[Option[Execution]]
+            rejectEmptyResponse {
+              complete((StatusCodes.Created, maybeExecution))
+            }
+          }
+        }
+      )
     }
 }

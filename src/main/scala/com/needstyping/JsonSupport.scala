@@ -8,5 +8,6 @@ trait JsonSupport extends SprayJsonSupport {
   import DefaultJsonProtocol._
 
   implicit val workflowJsonFormat = jsonFormat2(Workflow)
+  implicit val executionJsonFormat = jsonFormat4(Execution)
   implicit val createWorkflowJsonFormat = jsonFormat1(CreateWorkflow)
 }
