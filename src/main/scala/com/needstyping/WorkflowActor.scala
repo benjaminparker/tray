@@ -2,13 +2,22 @@ package com.needstyping
 
 import akka.actor.{Actor, Props}
 
+import scala.collection.immutable.HashMap
+
 case class Workflow(id: String, numberOfSteps: Int)
 
-object WorkflowActor {
 
+object WorkflowActor {
   final case class CreateWorkflow(numberOfSteps: Int)
 
+  val workflows : Map[String, Workflow] = HashMap.empty
+  var id = 0
   def props: Props = Props[WorkflowActor]
+
+  def createWF(numberOfSteps: Int): Workflow = {
+    id += 1
+    Workflow("WF" + id, numberOfSteps)
+  }
 }
 
 class WorkflowActor extends Actor {
@@ -17,8 +26,8 @@ class WorkflowActor extends Actor {
 
   def receive: Receive = {
     case CreateWorkflow(numberOfSteps) =>
-      //      create a workflow and store somehow in memory
-      val newWorkflow = Workflow("some id", numberOfSteps)
-      sender() ! newWorkflow
+      val wf = createWF(numberOfSteps)
+      workflows == workflows + (wf.id -> wf)
+      sender() ! wf
   }
 }

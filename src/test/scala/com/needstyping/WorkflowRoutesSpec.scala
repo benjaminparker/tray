@@ -17,14 +17,15 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
   "WorkflowRoutes" should {
 
     "create a new workflow for a given number of steps" in {
-      val createWorkflow = CreateWorkflow(5)
-      val entity = Marshal(createWorkflow).to[MessageEntity].futureValue
+      val entity = Marshal(CreateWorkflow(5)).to[MessageEntity].futureValue
       val request = Post("/workflows").withEntity(entity)
 
       request ~> routes ~> check {
         status shouldEqual StatusCodes.Created
         contentType shouldEqual ContentTypes.`application/json`
-        entityAs[Workflow] shouldEqual Workflow("some id", 5)
+        val wf = entityAs[Workflow]
+        wf.id should startWith ("WF")
+        wf.numberOfSteps shouldEqual 5
       }
     }
   }
