@@ -1,16 +1,16 @@
 package com.needstyping
 
 //#quick-start-server
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
-import akka.actor.{ ActorRef, ActorSystem }
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 //#main-class
-object QuickstartServer extends App with UserRoutes {
+object QuickstartServer extends App with WorkflowRoutes {
 
   // set up ActorSystem and other dependencies here
   //#main-class
@@ -19,11 +19,11 @@ object QuickstartServer extends App with UserRoutes {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   //#server-bootstrapping
 
-  val userRegistryActor: ActorRef = system.actorOf(UserRegistryActor.props, "userRegistryActor")
+  val workflowActor: ActorRef = system.actorOf(WorkflowActor.props, "userRegistryActor")
 
   //#main-class
   // from the UserRoutes trait
-  lazy val routes: Route = userRoutes
+  lazy val routes: Route = workflowRoutes
   //#main-class
 
   //#http-server

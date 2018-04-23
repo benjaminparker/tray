@@ -1,18 +1,12 @@
 package com.needstyping
 
-import com.needstyping.UserRegistryActor.ActionPerformed
-
-//#json-support
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import com.needstyping.WorkflowActor.CreateWorkflow
 import spray.json.DefaultJsonProtocol
 
 trait JsonSupport extends SprayJsonSupport {
-  // import the default encoders for primitive types (Int, String, Lists etc)
   import DefaultJsonProtocol._
 
-  implicit val userJsonFormat = jsonFormat3(User)
-  implicit val usersJsonFormat = jsonFormat1(Users)
-
-  implicit val actionPerformedJsonFormat = jsonFormat1(ActionPerformed)
+  implicit val workflowJsonFormat = jsonFormat2(Workflow)
+  implicit val createWorkflowJsonFormat = jsonFormat1(CreateWorkflow)
 }
-//#json-support
