@@ -60,7 +60,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
     "return a 404 NOT FOUND for a non-existant workflow" in {
       val request = Put("/workflows/WFNotFound/executions/EX3")
 
-      request ~> Route.seal(routes) ~> check {
+      request ~> routes ~> check {
         status shouldEqual StatusCodes.NotFound
       }
     }
@@ -72,7 +72,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
 
       val request = Put("/workflows/WF22/executions/EX2")
 
-      request ~> Route.seal(routes) ~> check {
+      request ~> routes ~> check {
         status shouldEqual StatusCodes.NotFound
       }
     }
@@ -86,7 +86,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
         status shouldEqual StatusCodes.NoContent
       }
 
-      Put("/workflows/WF3/executions/EX1") ~> Route.seal(routes) ~> check {
+      Put("/workflows/WF3/executions/EX1") ~> routes ~> check {
         status shouldEqual StatusCodes.BadRequest
       }
     }
