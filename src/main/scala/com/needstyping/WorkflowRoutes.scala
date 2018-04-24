@@ -36,19 +36,38 @@ trait WorkflowRoutes extends JsonSupport {
             }
           }
         },
-        path(Segment / "executions") { workflowId =>
-          post {
-            val maybeExecution = (workflowActor ? CreateExecution(workflowId)).mapTo[Option[Execution]]
-            onComplete(maybeExecution) {
-              case Success(Some(e: Execution)) =>
-                val json = JsObject("workflow_execution_id" -> JsString(e.id))
-                complete(StatusCodes.Created, json)
-              case Success(None) =>
-                complete(StatusCodes.NotFound)
-              case Failure(_) =>
-                complete(StatusCodes.InternalServerError)
+        pathPrefix(Segment / "executions") { workflowId =>
+          concat(
+            pathEnd {
+              post {
+                val maybeExecution = (workflowActor ? CreateExecution(workflowId)).mapTo[Option[Execution]]
+                onComplete(maybeExecution) {
+                  case Success(Some(e: Execution)) =>
+                    val json = JsObject("workflow_execution_id" -> JsString(e.id))
+                    complete(StatusCodes.Created, json)
+                  case Success(None) =>
+                    complete(StatusCodes.NotFound)
+                  case Failure(_) =>
+                    complete(StatusCodes.InternalServerError)
+                }
+              }
+            },
+            path(Segment) { executionId =>
+              put {
+                val result = workflowActor ? IncrementStep(workflowId, executionId)
+                onComplete(result) {
+                  case Success(StepIncremented) =>
+                    complete(StatusCodes.NoContent)
+                  case Success(StepNotIncremented) =>
+                    complete(StatusCodes.BadRequest)
+                  case Success(NotFound) =>
+                    complete(StatusCodes.NotFound)
+                  case _ =>
+                    complete(StatusCodes.InternalServerError)
+                }
+              }
             }
-          }
+          )
         }
       )
     }

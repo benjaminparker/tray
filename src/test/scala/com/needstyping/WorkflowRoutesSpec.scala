@@ -41,7 +41,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
     }
 
     "return a new execution for a given workflow" in {
-      //set up test data - maybe do this in separate method
+      //set up test data - public exposure of workflows doesn't feel nice - perhaps a dependency injection/stub model
       WorkflowActor.workflows = Map("WF76" -> Workflow("WF76", 0))
 
       val request = Post("/workflows/WF76/executions")
@@ -51,6 +51,43 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
         contentType shouldEqual ContentTypes.`application/json`
         val response = entityAs[String]
         response shouldEqual """{"workflow_execution_id":"EX1"}"""
+      }
+    }
+  }
+
+  "Increment current step" should {
+
+    "return a 404 NOT FOUND for a non-existant workflow" in {
+      val request = Put("/workflows/WFNotFound/executions/EX3")
+
+      request ~> Route.seal(routes) ~> check {
+        status shouldEqual StatusCodes.NotFound
+      }
+    }
+
+    "return a 404 NOT FOUND for a non-existant execution" in {
+
+      WorkflowActor.workflows = Map("WF22" -> Workflow("WF2", 4))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF22"))
+
+      val request = Put("/workflows/WF22/executions/EX2")
+
+      request ~> Route.seal(routes) ~> check {
+        status shouldEqual StatusCodes.NotFound
+      }
+    }
+
+    "increase the current step by 1 and then fail when number of steps is exceeded " in {
+
+      WorkflowActor.workflows = Map("WF3" -> Workflow("WF3", 5))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF3", 3))
+
+      Put("/workflows/WF3/executions/EX1") ~> routes ~> check {
+        status shouldEqual StatusCodes.NoContent
+      }
+
+      Put("/workflows/WF3/executions/EX1") ~> Route.seal(routes) ~> check {
+        status shouldEqual StatusCodes.BadRequest
       }
     }
   }
