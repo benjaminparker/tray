@@ -1,7 +1,5 @@
 package com.needstyping
 
-import java.time.LocalDate
-
 import akka.actor.ActorRef
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
@@ -26,16 +24,15 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
       request ~> routes ~> check {
         status shouldEqual StatusCodes.Created
         contentType shouldEqual ContentTypes.`application/json`
-        val wf = entityAs[Workflow]
-        wf.workflow_id should startWith("WF")
-        wf.number_of_steps shouldEqual 5
+        val response = entityAs[String]
+        response shouldEqual """{"workflow_id":"WF1"}"""
       }
     }
   }
 
   "Create new execution" should {
 
-    "return a 404 NOT FOUND for a non existant workflow" in {
+    "return a 404 NOT FOUND for a non-existant workflow" in {
       val request = Post("/workflows/WFNonExistant/executions")
 
       request ~> Route.seal(routes) ~> check {
@@ -52,11 +49,8 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
       request ~> routes ~> check {
         status shouldEqual StatusCodes.Created
         contentType shouldEqual ContentTypes.`application/json`
-        val ex = entityAs[Execution]
-        ex.execution_id should startWith("EX")
-        ex.workflow_id shouldEqual "WF76"
-        ex.current_step shouldEqual 0
-        ex.creation_date shouldEqual LocalDate.now.toString  //Only the date part so safe to run ... unless its close to midnight on a slow machine
+        val response = entityAs[String]
+        response shouldEqual """{"workflow_execution_id":"EX1"}"""
       }
     }
   }

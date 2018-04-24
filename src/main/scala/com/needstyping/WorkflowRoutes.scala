@@ -9,8 +9,10 @@ import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.pattern.ask
 import akka.util.Timeout
 import com.needstyping.WorkflowActor._
+import spray.json._
 
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 trait WorkflowRoutes extends JsonSupport {
 
@@ -25,10 +27,11 @@ trait WorkflowRoutes extends JsonSupport {
       concat(
         pathEnd {
           post {
-            entity(as[CreateWorkflow]) { json =>
-              val workflowCreated = (workflowActor ? CreateWorkflow(json.number_of_steps)).mapTo[Workflow]
+            entity(as[CreateWorkflow]) { createWorkflow =>
+              val workflowCreated = (workflowActor ? createWorkflow).mapTo[Workflow]
               onSuccess(workflowCreated) { workflow =>
-                complete((StatusCodes.Created, workflow))
+                val json = JsObject("workflow_id" -> JsString(workflow.id))
+                complete(StatusCodes.Created, json)
               }
             }
           }
@@ -36,8 +39,14 @@ trait WorkflowRoutes extends JsonSupport {
         path(Segment / "executions") { workflowId =>
           post {
             val maybeExecution = (workflowActor ? CreateExecution(workflowId)).mapTo[Option[Execution]]
-            rejectEmptyResponse {
-              complete((StatusCodes.Created, maybeExecution))
+            onComplete(maybeExecution) {
+              case Success(Some(e: Execution)) =>
+                val json = JsObject("workflow_execution_id" -> JsString(e.id))
+                complete(StatusCodes.Created, json)
+              case Success(None) =>
+                complete(StatusCodes.NotFound)
+              case Failure(_) =>
+                complete(StatusCodes.InternalServerError)
             }
           }
         }
