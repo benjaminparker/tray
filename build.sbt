@@ -20,3 +20,9 @@ lazy val root = (project in file(".")).
       "org.scalatest"     %% "scalatest"            % "3.0.1"         % Test
     )
   )
+
+mainClass in Compile := Some("com.needstyping.WorkflowServer")
+
+enablePlugins(JavaAppPackaging)
+
+enablePlugins(DockerPlugin)
