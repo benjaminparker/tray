@@ -7,10 +7,6 @@ import akka.actor.{Actor, ActorLogging, Props, Timers}
 import scala.collection.immutable.HashMap
 import scala.concurrent.duration._
 
-case class Workflow(id: String, numberOfSteps: Int)
-
-case class Execution(id: String, workflow: Workflow, currentStep: Int = 0, creationDate: String = LocalDateTime.now.toString)
-
 object WorkflowActor {
 
   case class CreateWorkflow(numberOfSteps: Int)
