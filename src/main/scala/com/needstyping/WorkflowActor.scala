@@ -15,9 +15,12 @@ object WorkflowActor {
   case class CreateWorkflow(numberOfSteps: Int)
   case class CreateExecution(workflowId: String)
   case class IncrementStep(workflowId: String, executionId: String)
+  case class WorkflowExecutionState(workflowId: String, executionId: String)
   case object StepIncremented
   case object StepNotIncremented
   case object NotFound
+  case object ExecutionFinished
+  case object ExecutionNotFinished
 
   //These horrible vars are needed as we are using memory as a data store - alternative is mutable map which seems worse and not thread safe
   var workflows: Map[String, Workflow] = HashMap.empty
@@ -64,6 +67,20 @@ class WorkflowActor extends Actor {
             StepIncremented
           } else
             StepNotIncremented
+        case _ =>
+          NotFound
+      }
+      sender() ! result
+
+    case WorkflowExecutionState(wfId, exId) =>
+      val workflow = workflows.get(wfId)
+      val execution = executions.get(exId)
+      val result = (workflow, execution) match {
+        case (Some(wf), Some(ex))  =>
+          if (ex.currentStep >= wf.numberOfSteps - 1) {
+            ExecutionFinished
+          } else
+            ExecutionNotFinished
         case _ =>
           NotFound
       }

@@ -91,4 +91,57 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
       }
     }
   }
+
+  "Get execution status" should {
+
+    "return a 404 NOT FOUND for a non-existant workflow" in {
+      val request = Get("/workflows/WFNotFound/executions/EX3")
+
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.NotFound
+      }
+    }
+
+    "return a 404 NOT FOUND for a non-existant execution" in {
+
+      WorkflowActor.workflows = Map("WF22" -> Workflow("WF2", 4))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF22"))
+
+      val request = Get("/workflows/WF22/executions/EX7")
+
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.NotFound
+      }
+    }
+
+    "return finished equal true for current step >= number of steps - 1" in {
+
+      WorkflowActor.workflows = Map("WF5" -> Workflow("WF5", 3))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF5", 2))
+
+      val request = Get("/workflows/WF5/executions/EX1")
+
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val response = entityAs[String]
+        response shouldEqual """{"finished":true}"""
+      }
+    }
+
+    "return finished equal false for current step < number of steps - 1" in {
+
+      WorkflowActor.workflows = Map("WF5" -> Workflow("WF5", 3))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF5", 1))
+
+      val request = Get("/workflows/WF5/executions/EX1")
+
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val response = entityAs[String]
+        response shouldEqual """{"finished":false}"""
+      }
+    }
+  }
 }

@@ -53,19 +53,34 @@ trait WorkflowRoutes extends JsonSupport {
               }
             },
             path(Segment) { executionId =>
-              put {
-                val result = workflowActor ? IncrementStep(workflowId, executionId)
-                onComplete(result) {
-                  case Success(StepIncremented) =>
-                    complete(StatusCodes.NoContent)
-                  case Success(StepNotIncremented) =>
-                    complete(StatusCodes.BadRequest)
-                  case Success(NotFound) =>
-                    complete(StatusCodes.NotFound)
-                  case _ =>
-                    complete(StatusCodes.InternalServerError)
+              concat(
+                put {
+                  val result = workflowActor ? IncrementStep(workflowId, executionId)
+                  onComplete(result) {
+                    case Success(StepIncremented) =>
+                      complete(StatusCodes.NoContent)
+                    case Success(StepNotIncremented) =>
+                      complete(StatusCodes.BadRequest)
+                    case Success(NotFound) =>
+                      complete(StatusCodes.NotFound)
+                    case _ =>
+                      complete(StatusCodes.InternalServerError)
+                  }
+                },
+                get {
+                  val result = workflowActor ? WorkflowExecutionState(workflowId, executionId)
+                  onComplete(result) {
+                    case Success(ExecutionFinished) =>
+                      complete(StatusCodes.OK, JsObject("finished" -> JsBoolean(true)))
+                    case Success(ExecutionNotFinished) =>
+                      complete(StatusCodes.OK, JsObject("finished" -> JsBoolean(false)))
+                    case Success(NotFound) =>
+                      complete(StatusCodes.NotFound)
+                    case _ =>
+                      complete(StatusCodes.InternalServerError)
+                  }
                 }
-              }
+              )
             }
           )
         }
