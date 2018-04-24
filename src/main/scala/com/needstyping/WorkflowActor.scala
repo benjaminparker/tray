@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 
 object WorkflowActor {
 
-  case class CreateWorkflow(numberOfSteps: Int)
+  case class CreateWorkflow(number_of_steps: Int)
 
   case class CreateExecution(workflowId: String)
 
@@ -64,19 +64,24 @@ class WorkflowActor extends Actor with Timers with ActorLogging {
 
   def receive: Receive = {
 
-    case TriggerScheduling => triggerScheduling
+    case TriggerScheduling =>
+      log.info("Starting scheduled jobs...")
+      triggerScheduling
 
     case CreateWorkflow(numberOfSteps) =>
+      log.debug(s"Creating new workflow with $numberOfSteps steps")
       val wf = createWF(numberOfSteps)
       workflows = workflows + (wf.id -> wf)
       sender() ! wf
 
     case CreateExecution(wfId) =>
+      log.debug(s"Creating execution for Workflow: $wfId")
       val execution = workflows.get(wfId) map createExecution
-      execution foreach { e => executions == executions + (e.id -> e) }
+      execution foreach { e => executions = executions + (e.id -> e) }
       sender() ! execution
 
     case IncrementStep(wfId, exId) =>
+      log.debug(s"Attempting to increment step for Workflow: $wfId, Execution: $exId")
       val workflow = workflows.get(wfId)
       val execution = executions.get(exId)
       val result = (workflow, execution) match {
@@ -85,29 +90,34 @@ class WorkflowActor extends Actor with Timers with ActorLogging {
             val updatedExecution = ex.id -> Execution(ex.id, ex.workflow, ex.currentStep + 1, ex.creationDate)
             executions = executions - ex.id + updatedExecution
             StepIncremented
-          } else
+          } else {
             StepNotIncremented
+          }
         case _ =>
+          log.debug("Workflow execution not found")
           NotFound
       }
       sender() ! result
 
     case WorkflowExecutionState(wfId, exId) =>
+      log.debug(s"Checking the workflow execution state for Workflow: $wfId, Execution: $exId")
       val workflow = workflows.get(wfId)
       val execution = executions.get(exId)
       val result = (workflow, execution) match {
         case (Some(wf), Some(ex)) =>
-          if (isFinished(wf, ex))
+          if (isFinished(wf, ex)) {
             ExecutionFinished
-          else
+          } else {
             ExecutionNotFinished
+          }
         case _ =>
+          log.debug("Workflow execution not found")
           NotFound
       }
       sender() ! result
 
     case RemoveFinishedExecutions =>
-      log.info("Looking for finished executions older than 1 minute")
+      log.debug("Looking for finished executions older than 1 minute")
 
       val finishedIds = executions.values.filter(e => isFinished(e.workflow, e) && isOlderThanOneMinute(e)).map(_.id)
       if (finishedIds.nonEmpty) {

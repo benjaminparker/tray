@@ -7,12 +7,17 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.needstyping.WorkflowActor._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 
-class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest with WorkflowRoutes {
+class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest with WorkflowRoutes with BeforeAndAfterEach {
   override val workflowActor: ActorRef = system.actorOf(WorkflowActor.props, "workflowActorProps")
 
   lazy val routes = workflowRoutes
+
+  override def beforeEach = {
+    workflows = Map.empty
+    executions = Map.empty
+  }
 
   "Create new workflow" should {
 
@@ -25,6 +30,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
         contentType shouldEqual ContentTypes.`application/json`
         val response = entityAs[String]
         response shouldEqual """{"workflow_id":"WF1"}"""
+        workflows.size shouldEqual 1
       }
     }
   }
@@ -50,6 +56,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
         contentType shouldEqual ContentTypes.`application/json`
         val response = entityAs[String]
         response shouldEqual """{"workflow_execution_id":"EX1"}"""
+        executions.size shouldEqual 1
       }
     }
   }
