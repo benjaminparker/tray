@@ -10,7 +10,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 
 class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest with WorkflowRoutes {
-
   override val workflowActor: ActorRef = system.actorOf(WorkflowActor.props, "workflowActorProps")
 
   lazy val routes = workflowRoutes
@@ -67,8 +66,8 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
 
     "return a 404 NOT FOUND for a non-existant execution" in {
 
-      WorkflowActor.workflows = Map("WF22" -> Workflow("WF2", 4))
-      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF22"))
+      WorkflowActor.workflows = Map("WF22" -> Workflow("WF22", 4))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", Workflow("WF22", 4)))
 
       val request = Put("/workflows/WF22/executions/EX2")
 
@@ -80,7 +79,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
     "increase the current step by 1 and then fail when number of steps is exceeded " in {
 
       WorkflowActor.workflows = Map("WF3" -> Workflow("WF3", 5))
-      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF3", 3))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", Workflow("WF3", 5), 3))
 
       Put("/workflows/WF3/executions/EX1") ~> routes ~> check {
         status shouldEqual StatusCodes.NoContent
@@ -104,8 +103,8 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
 
     "return a 404 NOT FOUND for a non-existant execution" in {
 
-      WorkflowActor.workflows = Map("WF22" -> Workflow("WF2", 4))
-      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF22"))
+      WorkflowActor.workflows = Map("WF22" -> Workflow("WF22", 4))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", Workflow("WF22", 4)))
 
       val request = Get("/workflows/WF22/executions/EX7")
 
@@ -117,7 +116,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
     "return finished equal true for current step >= number of steps - 1" in {
 
       WorkflowActor.workflows = Map("WF5" -> Workflow("WF5", 3))
-      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF5", 2))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", Workflow("WF5", 3), 2))
 
       val request = Get("/workflows/WF5/executions/EX1")
 
@@ -132,7 +131,7 @@ class WorkflowRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
     "return finished equal false for current step < number of steps - 1" in {
 
       WorkflowActor.workflows = Map("WF5" -> Workflow("WF5", 3))
-      WorkflowActor.executions = Map("EX1" -> Execution("EX1", "WF5", 1))
+      WorkflowActor.executions = Map("EX1" -> Execution("EX1", Workflow("WF5", 3), 1))
 
       val request = Get("/workflows/WF5/executions/EX1")
 
